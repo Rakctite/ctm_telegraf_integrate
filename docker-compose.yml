@@ -1,0 +1,67 @@
+name: ctm-telegraf-integrate
+
+services:
+  db:
+    image: ${REGISTRY:-203.228.107.184:5000}/btx/edge-hmi-db:${DB_IMAGE_TAG:-latest}
+    pull_policy: always
+    container_name: hmi-db-postgres
+    environment:
+      TZ: ${TZ:-Asia/Jakarta}
+      POSTGRES_DB: edge_hmi
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 1q2w3e4r
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - edge_hmi_data:/var/lib/postgresql/data
+      - edge_hmi_backups:/opt/edge-hmi/db/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d edge_hmi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  mosquitto:
+    image: ${REGISTRY:-203.228.107.184:5000}/mosquitto:${MQTT_IMAGE_TAG:-v1.0.0}
+    pull_policy: always
+    container_name: mqtt-mosquitto
+    ports:
+      - "${MQTT_PORT:-1883}:1883"
+      - "${MQTT_DASHBOARD_PORT:-9883}:9883"
+    volumes:
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    healthcheck:
+      test: ["CMD", "mosquitto_pub", "-h", "127.0.0.1", "-t", "healthcheck", "-m", "ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+
+  ctm_telegraf_integrate:
+    image: ${REGISTRY:-203.228.107.184:5000}/btx/ctm_telegraf_integrate:${CTM_TELEGRAF_INTEGRATE_IMAGE_TAG:-1.0.0}
+    pull_policy: always
+    container_name: ctm_telegraf_integrate
+    environment:
+      TZ: ${TZ:-Asia/Jakarta}
+    depends_on:
+      db:
+        condition: service_healthy
+      mosquitto:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "pgrep", "-x", "telegraf"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  edge_hmi_data:
+  edge_hmi_backups:
+  mosquitto_data:
+  mosquitto_log:

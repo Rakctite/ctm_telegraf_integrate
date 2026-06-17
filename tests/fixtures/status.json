@@ -1,0 +1,21 @@
+{
+  "timestamp": "2026-06-18 05:46:36.439+07",
+  "sensors": [
+    {
+      "sensor_code": "Temp_ST01_PL01",
+      "conn_status": "on",
+      "last_seen": "2026-06-18 05:46:36.049+07",
+      "health_score": 100.0,
+      "error_msg": null,
+      "update_time": "2026-06-18 05:46:36.439+07"
+    },
+    {
+      "sensor_code": "Temp_ST01_PL02",
+      "conn_status": "off",
+      "last_seen": "2026-06-18 05:46:36.095+07",
+      "health_score": 50.0,
+      "error_msg": "Error:timeout",
+      "update_time": "2026-06-18 05:46:36.439+07"
+    }
+  ]
+}
