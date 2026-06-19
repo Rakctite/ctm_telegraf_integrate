@@ -20,8 +20,8 @@
 - If the change affects integrated deployment behavior, also update the root `C:\Users\mingyu.shin\docker\SESSION.md`.
 
 ## Docker Image
-- Last recorded pushed image: `203.228.107.184:5000/btx/ctm_telegraf_integrate:1.0.0`.
-- Build source tag recorded in README: `ctm_telegraf_integrate:1.0.0`.
+- Last recorded pushed image: `203.228.107.184:5000/btx/ctm_telegraf_integrate:1.0.2`.
+- Build source tag recorded in README: `ctm_telegraf_integrate:1.0.2`.
 
 ## Latest State
 - 2026-06-18: Working tree was clean and tracking `origin/main`.
@@ -59,3 +59,12 @@
 - Fixed observer responsibility split: observer now updates `core.sensor_status`; PostgreSQL trigger records history. Observer loads watched system sensors from `core.sensor_mst` joined to `core.equip_mst` and `core.line_mst`, not from `v_topic_mapping`.
 - Verified against Docker Desktop DB with isolated test equip `CODEX_OBS_TEST`: timeout changed system and child current statuses to `off`, trigger wrote offline history, recovery update wrote recovery history, and cleanup removed all test rows. Final history count returned to `0`.
 - Verification after fix: `python -m pytest` -> `13 passed`; `docker compose config` -> ok; `docker build -t ctm_telegraf_integrate:observer-test .` -> ok.
+
+### 2026-06-19 Build And Push
+- Corrected README observer flow to show `status_observer.py -> core.sensor_status update -> sensor_status trigger -> core.sensor_status_history`.
+- Verified before build: `python -m pytest` -> `13 passed`; `docker compose config` -> ok.
+- Built image tags:
+  - `ctm_telegraf_integrate:1.0.2`
+  - `203.228.107.184:5000/btx/ctm_telegraf_integrate:1.0.2`
+- Verified image contents: `status_observer.py`, `paho.mqtt.client`, and `psycopg2` are present.
+- Pushed registry image `203.228.107.184:5000/btx/ctm_telegraf_integrate:1.0.2`, digest `sha256:972e5fc343d201ee5a2633efde7d8ae850c35c4fcae17cf1f978ca66e240a646`.

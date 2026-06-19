@@ -40,8 +40,9 @@ Status observer flow:
 C-S/{plant}/{building}/{process}/{line_code}/{equip_name}/{station}/{source}/status
   -> status_observer.py
   -> in-memory last_seen tracking
-  -> core.sensor_status_history on offline/recovery
   -> core.sensor_status off update on timeout
+  -> sensor_status trigger
+  -> core.sensor_status_history on status/error changes
 ```
 
 Both processors use `core.v_topic_mapping` with the existing mapping key:
