@@ -53,4 +53,4 @@
 - Documented observer flow and settings in `README.md`.
 - Added tests in `tests/test_status_observer.py` and expanded `tests/test_telegraf_config.py`.
 - Verification: `python -m pytest` -> `13 passed`.
-- Commit: `104e5e1 Add MQTT status observer service`.
+- Implementation commit: `d0bea38 Add MQTT status observer service`.
