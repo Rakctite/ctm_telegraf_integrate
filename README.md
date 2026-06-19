@@ -59,6 +59,10 @@ Telegraf. It subscribes to 9-level status topics directly and keeps per-system
 `last_seen` state in memory. On startup it loads current system status from
 PostgreSQL once, then uses MQTT messages for normal operation.
 
+History rows are written by the PostgreSQL `sensor_status` update trigger. The
+observer updates `core.sensor_status` on timeout, and the trigger records status
+or error changes in `core.sensor_status_history`.
+
 Default watched system sensor code:
 
 ```text
@@ -68,9 +72,9 @@ PYTHON_SYSTEM
 Timeout behavior:
 
 - repeated `on` heartbeats only refresh in-memory `last_seen`;
-- no heartbeat for `STATUS_OBSERVER_OFFLINE_TIMEOUT_S` seconds records one `offline` event;
-- system offline also sets sensors in the same `line_code` and `equip_name` group to `off`;
-- the first heartbeat after offline records one `recovery` event.
+- no heartbeat for `STATUS_OBSERVER_OFFLINE_TIMEOUT_S` seconds changes current status to `off`;
+- system offline also sets sensors with the same `equip_id` to `off`;
+- the database trigger records `offline`, `recovery`, and `error_change` history events.
 
 Main settings:
 

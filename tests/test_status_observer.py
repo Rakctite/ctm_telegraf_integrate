@@ -20,12 +20,14 @@ class FakeStore:
         self.mappings = [
             {
                 "sensor_id": 301,
+                "equip_id": 20,
                 "line_code": "LO054",
                 "equip_name": "MC02",
                 "sensor_code": "PYTHON_SYSTEM",
             },
             {
                 "sensor_id": 211,
+                "equip_id": 20,
                 "line_code": "LO054",
                 "equip_name": "MC02",
                 "sensor_code": "Temp_ST01_PL01",
@@ -39,16 +41,13 @@ class FakeStore:
         }
         self.history = []
         self.offline_updates = []
-        self.cascade_updates = []
+        self.group_updates = []
 
     def fetch_sensor_mappings(self):
         return list(self.mappings)
 
     def fetch_current_status(self, sensor_ids):
         return {sensor_id: self.current.get(sensor_id, {}) for sensor_id in sensor_ids}
-
-    def insert_history(self, **event):
-        self.history.append(event)
 
     def mark_sensor_offline(self, sensor_id, event_time, error_msg):
         self.offline_updates.append((sensor_id, event_time, error_msg))
@@ -57,8 +56,8 @@ class FakeStore:
             "last_seen": self.current.get(sensor_id, {}).get("last_seen"),
         }
 
-    def mark_group_offline(self, line_code, equip_name, exclude_sensor_id, event_time, error_msg):
-        self.cascade_updates.append((line_code, equip_name, exclude_sensor_id, event_time, error_msg))
+    def mark_group_offline(self, equip_id, exclude_sensor_id, event_time, error_msg):
+        self.group_updates.append((equip_id, exclude_sensor_id, event_time, error_msg))
 
 
 class StatusObserverTests(unittest.TestCase):
@@ -80,15 +79,13 @@ class StatusObserverTests(unittest.TestCase):
         observer.check_timeouts(datetime(2026, 6, 19, 10, 0, 6, tzinfo=timezone.utc))
 
         self.assertEqual(store.offline_updates[0][0], 301)
-        self.assertEqual(store.cascade_updates[0][0:3], ("LO054", "MC02", 301))
-        self.assertEqual(store.history[0]["sensor_id"], 301)
-        self.assertEqual(store.history[0]["event_type"], "offline")
-        self.assertEqual(store.history[0]["conn_status"], "off")
+        self.assertEqual(store.group_updates[0][0:2], (20, 301))
+        self.assertEqual(store.history, [])
         self.assertEqual(observer.system_states[301].conn_status, "off")
 
         observer.check_timeouts(datetime(2026, 6, 19, 10, 0, 7, tzinfo=timezone.utc))
 
-        self.assertEqual(len(store.history), 1)
+        self.assertEqual(len(store.history), 0)
         self.assertEqual(len(store.offline_updates), 1)
 
     def test_heartbeat_after_offline_records_recovery_once(self):
@@ -128,9 +125,7 @@ class StatusObserverTests(unittest.TestCase):
             datetime(2026, 6, 19, 10, 0, 3, tzinfo=timezone.utc),
         )
 
-        self.assertEqual(len(store.history), 1)
-        self.assertEqual(store.history[0]["event_type"], "recovery")
-        self.assertEqual(store.history[0]["conn_status"], "on")
+        self.assertEqual(store.history, [])
         self.assertEqual(observer.system_states[301].conn_status, "on")
 
     def test_startup_grace_delays_timeout_judgement(self):

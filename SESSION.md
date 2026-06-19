@@ -54,3 +54,8 @@
 - Added tests in `tests/test_status_observer.py` and expanded `tests/test_telegraf_config.py`.
 - Verification: `python -m pytest` -> `13 passed`.
 - Implementation commit: `d0bea38 Add MQTT status observer service`.
+- 2026-06-19 Docker Desktop validation found the running `ctm_telegraf_integrate_local` image did not include `status_observer.py` or `paho`; rebuilt local test image `ctm_telegraf_integrate:observer-test` successfully.
+- Live DB validation found observer history inserts were still using the old temporary schema (`conn_status`, `source`) while the applied hypertable uses `conn_status_before`, `conn_status_after`, `equip_id`, and `update_time`.
+- Fixed observer responsibility split: observer now updates `core.sensor_status`; PostgreSQL trigger records history. Observer loads watched system sensors from `core.sensor_mst` joined to `core.equip_mst` and `core.line_mst`, not from `v_topic_mapping`.
+- Verified against Docker Desktop DB with isolated test equip `CODEX_OBS_TEST`: timeout changed system and child current statuses to `off`, trigger wrote offline history, recovery update wrote recovery history, and cleanup removed all test rows. Final history count returned to `0`.
+- Verification after fix: `python -m pytest` -> `13 passed`; `docker compose config` -> ok; `docker build -t ctm_telegraf_integrate:observer-test .` -> ok.

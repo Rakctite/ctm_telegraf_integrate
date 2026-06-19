@@ -45,6 +45,7 @@ class ObserverConfig:
 @dataclass
 class SystemState:
     sensor_id: int
+    equip_id: int
     line_code: str
     equip_name: str
     sensor_code: str
@@ -75,6 +76,7 @@ class StatusObserver:
             status = current.get(row["sensor_id"], {})
             state = SystemState(
                 sensor_id=row["sensor_id"],
+                equip_id=row["equip_id"],
                 line_code=row["line_code"],
                 equip_name=row["equip_name"],
                 sensor_code=row["sensor_code"],
@@ -132,18 +134,9 @@ class StatusObserver:
             age = (check_time - state.last_seen).total_seconds()
             if age >= self.config.offline_timeout_s and state.conn_status != "off":
                 error_msg = f"heartbeat timeout after {int(age)}s"
-                self.store.insert_history(
-                    sensor_id=state.sensor_id,
-                    event_type="offline",
-                    conn_status="off",
-                    event_time=check_time,
-                    source="observer",
-                    error_msg=error_msg,
-                )
                 self.store.mark_sensor_offline(state.sensor_id, check_time, error_msg)
                 self.store.mark_group_offline(
-                    state.line_code,
-                    state.equip_name,
+                    state.equip_id,
                     state.sensor_id,
                     check_time,
                     "parent system heartbeat timeout",
@@ -162,16 +155,6 @@ class StatusObserver:
             state.conn_status = conn_status
             state.last_seen = last_seen
 
-        if previous == "off" and conn_status != "off":
-            self.store.insert_history(
-                sensor_id=sensor_id,
-                event_type="recovery",
-                conn_status=conn_status,
-                event_time=event_time,
-                source="observer",
-                error_msg=None,
-            )
-
 
 class PostgresStatusStore:
     def __init__(self, db_config: str = DB_CONFIG):
@@ -182,8 +165,17 @@ class PostgresStatusStore:
             with conn.cursor() as cur:
                 cur.execute("SET search_path TO core, public")
                 cur.execute(
-                    "SELECT line_code, equip_name, sensor_code, sensor_id "
-                    "FROM v_topic_mapping;"
+                    """
+                    SELECT l.line_code,
+                           e.equip_name,
+                           s.sensor_name AS sensor_code,
+                           s.id AS sensor_id,
+                           s.equip_id
+                    FROM sensor_mst s
+                    JOIN equip_mst e ON e.id = s.equip_id
+                    JOIN line_mst l ON l.id = e.line_id
+                    WHERE s.is_active IS TRUE;
+                    """
                 )
                 return [
                     {
@@ -191,6 +183,7 @@ class PostgresStatusStore:
                         "equip_name": row[1],
                         "sensor_code": row[2],
                         "sensor_id": row[3],
+                        "equip_id": row[4],
                     }
                     for row in cur.fetchall()
                 ]
@@ -214,19 +207,6 @@ class PostgresStatusStore:
                     for row in cur.fetchall()
                 }
 
-    def insert_history(self, sensor_id, event_type, conn_status, event_time, source, error_msg):
-        with self._connect() as conn:
-            with conn.cursor() as cur:
-                self._ensure_history_table(cur)
-                cur.execute(
-                    """
-                    INSERT INTO sensor_status_history
-                        (sensor_id, event_type, conn_status, event_time, source, error_msg)
-                    VALUES (%s, %s, %s, %s, %s, %s)
-                    """,
-                    (sensor_id, event_type, conn_status, event_time, source, error_msg),
-                )
-
     def mark_sensor_offline(self, sensor_id, event_time, error_msg):
         with self._connect() as conn:
             with conn.cursor() as cur:
@@ -243,7 +223,7 @@ class PostgresStatusStore:
                     (error_msg, event_time, sensor_id),
                 )
 
-    def mark_group_offline(self, line_code, equip_name, exclude_sensor_id, event_time, error_msg):
+    def mark_group_offline(self, equip_id, exclude_sensor_id, event_time, error_msg):
         with self._connect() as conn:
             with conn.cursor() as cur:
                 cur.execute("SET search_path TO core, public")
@@ -254,40 +234,16 @@ class PostgresStatusStore:
                         health_score = 0,
                         error_msg = %s,
                         update_time = %s
-                    FROM v_topic_mapping tm
-                    WHERE ss.sensor_id = tm.sensor_id
-                      AND tm.line_code = %s
-                      AND tm.equip_name = %s
+                    FROM sensor_mst sm
+                    WHERE ss.sensor_id = sm.id
+                      AND sm.equip_id = %s
                       AND ss.sensor_id <> %s
                     """,
-                    (error_msg, event_time, line_code, equip_name, exclude_sensor_id),
+                    (error_msg, event_time, equip_id, exclude_sensor_id),
                 )
 
     def _connect(self):
         return psycopg2.connect(self.db_config)
-
-    def _ensure_history_table(self, cur):
-        cur.execute("SET search_path TO core, public")
-        cur.execute(
-            """
-            CREATE TABLE IF NOT EXISTS sensor_status_history (
-                id bigserial PRIMARY KEY,
-                sensor_id int4 NOT NULL,
-                event_type varchar(50) NOT NULL,
-                conn_status varchar(50) NOT NULL,
-                event_time timestamptz NOT NULL,
-                source varchar(50) NOT NULL,
-                error_msg text NULL,
-                created_at timestamptz NOT NULL DEFAULT now()
-            )
-            """
-        )
-        cur.execute(
-            """
-            CREATE INDEX IF NOT EXISTS idx_sensor_status_history_sensor_event
-            ON sensor_status_history (sensor_id, event_time DESC)
-            """
-        )
 
 
 def run_observer():
