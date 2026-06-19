@@ -27,6 +27,7 @@
 - 2026-06-18: Working tree was clean and tracking `origin/main`.
 - 2026-06-18: Compose includes PostgreSQL, Mosquitto, and `ctm_telegraf_integrate`.
 - 2026-06-18: Project README documents measurement and status data flows.
+- 2026-06-19: Added a status observer design in this project only. It subscribes to 9-level status topics, keeps system heartbeat state in memory, loads DB state once on startup, and writes offline/recovery history on state transitions.
 
 ## Open TODO
 - Confirm whether root compose or this service compose is authoritative for integrated deployments.
@@ -42,3 +43,14 @@
   - `C-S/{plant}/{building}/{process}/{line_code}/{equip_name}/{station}/{source}` to `core.measurement`.
   - Same path with `/status` suffix to `core.sensor_status`.
 - Recorded Docker image version from README and compose.
+
+### 2026-06-19
+- Added `telegraf_py/status_observer.py`.
+- Observer startup behavior: loads watched system sensors from `core.v_topic_mapping` and current state from `core.sensor_status` once, then applies a startup grace window before timeout judgement.
+- Observer runtime behavior: subscribes to `C-S/+/+/+/+/+/+/+/status`, tracks per-system `last_seen` in memory, records one `offline` event after timeout, cascades current status `off` to the same `line_code`/`equip_name` group, and records one `recovery` event on the first heartbeat after offline.
+- Added compose service `status_observer` using the same `ctm_telegraf_integrate` image with command `python3 -u /telegraf/telegraf_py/status_observer.py`.
+- Added Docker image dependency `python3-paho-mqtt`.
+- Documented observer flow and settings in `README.md`.
+- Added tests in `tests/test_status_observer.py` and expanded `tests/test_telegraf_config.py`.
+- Verification: `python -m pytest` -> `13 passed`.
+- Commit: `104e5e1 Add MQTT status observer service`.
