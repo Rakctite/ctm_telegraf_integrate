@@ -42,7 +42,7 @@ services:
     restart: unless-stopped
 
   ctm_telegraf_integrate:
-    image: ${REGISTRY:-203.228.107.184:5000}/btx/ctm_telegraf_integrate:${CTM_TELEGRAF_INTEGRATE_IMAGE_TAG:-1.0.2}
+    image: ${REGISTRY:-203.228.107.184:5000}/btx/ctm_telegraf_integrate:${CTM_TELEGRAF_INTEGRATE_IMAGE_TAG:-1.0.3}
     pull_policy: always
     container_name: ctm_telegraf_integrate
     environment:
@@ -61,7 +61,7 @@ services:
     restart: unless-stopped
 
   status_observer:
-    image: ${REGISTRY:-203.228.107.184:5000}/btx/ctm_telegraf_integrate:${CTM_TELEGRAF_INTEGRATE_IMAGE_TAG:-1.0.2}
+    image: ${REGISTRY:-203.228.107.184:5000}/btx/ctm_telegraf_integrate:${CTM_TELEGRAF_INTEGRATE_IMAGE_TAG:-1.0.3}
     pull_policy: always
     container_name: ctm_status_observer
     command: ["python3", "-u", "/telegraf/telegraf_py/status_observer.py"]
@@ -70,7 +70,7 @@ services:
       DB_CONFIG: ${STATUS_OBSERVER_DB_CONFIG:-host=hmi-db-postgres dbname=edge_hmi user=admin password=1q2w3e4r connect_timeout=5}
       MQTT_HOST: ${STATUS_OBSERVER_MQTT_HOST:-mosquitto}
       MQTT_PORT: ${STATUS_OBSERVER_MQTT_PORT:-1883}
-      STATUS_OBSERVER_SYSTEM_SENSOR_CODES: ${STATUS_OBSERVER_SYSTEM_SENSOR_CODES:-PYTHON_SYSTEM}
+      STATUS_OBSERVER_SYSTEM_SENSOR_CODES: ${STATUS_OBSERVER_SYSTEM_SENSOR_CODES:-SYSTEM}
       STATUS_OBSERVER_OFFLINE_TIMEOUT_S: ${STATUS_OBSERVER_OFFLINE_TIMEOUT_S:-5}
       STATUS_OBSERVER_CHECK_INTERVAL_S: ${STATUS_OBSERVER_CHECK_INTERVAL_S:-1}
       STATUS_OBSERVER_STARTUP_GRACE_S: ${STATUS_OBSERVER_STARTUP_GRACE_S:-5}

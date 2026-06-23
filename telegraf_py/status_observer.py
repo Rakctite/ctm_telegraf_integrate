@@ -21,7 +21,7 @@ MQTT_TOPIC = os.getenv("STATUS_OBSERVER_TOPIC", "C-S/+/+/+/+/+/+/+/status")
 
 @dataclass(frozen=True)
 class ObserverConfig:
-    system_sensor_codes: tuple[str, ...] = ("PYTHON_SYSTEM",)
+    system_sensor_codes: tuple[str, ...] = ("SYSTEM",)
     offline_timeout_s: float = 5.0
     check_interval_s: float = 1.0
     startup_grace_s: float = 5.0
@@ -32,7 +32,7 @@ class ObserverConfig:
         return cls(
             system_sensor_codes=tuple(
                 code.strip()
-                for code in os.getenv("STATUS_OBSERVER_SYSTEM_SENSOR_CODES", "PYTHON_SYSTEM").split(",")
+                for code in os.getenv("STATUS_OBSERVER_SYSTEM_SENSOR_CODES", "SYSTEM").split(",")
                 if code.strip()
             ),
             offline_timeout_s=_float_env("STATUS_OBSERVER_OFFLINE_TIMEOUT_S", cls.offline_timeout_s),

@@ -1,5 +1,6 @@
 import importlib
 import json
+import os
 import pathlib
 import sys
 import types
@@ -23,7 +24,7 @@ class FakeStore:
                 "equip_id": 20,
                 "line_code": "LO054",
                 "equip_name": "MC02",
-                "sensor_code": "PYTHON_SYSTEM",
+                "sensor_code": "SYSTEM",
             },
             {
                 "sensor_id": 211,
@@ -64,12 +65,22 @@ class StatusObserverTests(unittest.TestCase):
     def setUp(self):
         self.observer_module = importlib.import_module("status_observer")
 
+    def test_default_system_sensor_code_is_system(self):
+        old_value = os.environ.pop("STATUS_OBSERVER_SYSTEM_SENSOR_CODES", None)
+        try:
+            config = self.observer_module.ObserverConfig.from_env()
+        finally:
+            if old_value is not None:
+                os.environ["STATUS_OBSERVER_SYSTEM_SENSOR_CODES"] = old_value
+
+        self.assertEqual(config.system_sensor_codes, ("SYSTEM",))
+
     def test_timeout_marks_system_offline_and_cascades_child_sensors(self):
         store = FakeStore()
         observer = self.observer_module.StatusObserver(
             store,
             self.observer_module.ObserverConfig(
-                system_sensor_codes=("PYTHON_SYSTEM",),
+                system_sensor_codes=("SYSTEM",),
                 offline_timeout_s=5,
                 startup_grace_s=0,
             ),
@@ -94,7 +105,7 @@ class StatusObserverTests(unittest.TestCase):
         observer = self.observer_module.StatusObserver(
             store,
             self.observer_module.ObserverConfig(
-                system_sensor_codes=("PYTHON_SYSTEM",),
+                system_sensor_codes=("SYSTEM",),
                 offline_timeout_s=5,
                 startup_grace_s=0,
             ),
@@ -106,7 +117,7 @@ class StatusObserverTests(unittest.TestCase):
                 "timestamp": "2026-06-19 10:00:02.000+00",
                 "sensors": [
                     {
-                        "sensor_code": "PYTHON_SYSTEM",
+                        "sensor_code": "SYSTEM",
                         "conn_status": "on",
                         "last_seen": "2026-06-19 10:00:02.000+00",
                         "update_time": "2026-06-19 10:00:02.000+00",
@@ -133,7 +144,7 @@ class StatusObserverTests(unittest.TestCase):
         observer = self.observer_module.StatusObserver(
             store,
             self.observer_module.ObserverConfig(
-                system_sensor_codes=("PYTHON_SYSTEM",),
+                system_sensor_codes=("SYSTEM",),
                 offline_timeout_s=5,
                 startup_grace_s=10,
             ),

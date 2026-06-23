@@ -5,13 +5,13 @@ Integrated Telegraf service for CTM measurement data and sensor status data.
 ## Image
 
 ```sh
-docker build -t ctm_telegraf_integrate:1.0.2 .
+docker build -t ctm_telegraf_integrate:1.0.3 .
 ```
 
 Registry tag:
 
 ```text
-203.228.107.184:5000/btx/ctm_telegraf_integrate:1.0.2
+203.228.107.184:5000/btx/ctm_telegraf_integrate:1.0.3
 ```
 
 ## Data Flow
@@ -67,7 +67,7 @@ or error changes in `core.sensor_status_history`.
 Default watched system sensor code:
 
 ```text
-PYTHON_SYSTEM
+SYSTEM
 ```
 
 Timeout behavior:
@@ -80,7 +80,7 @@ Timeout behavior:
 Main settings:
 
 ```text
-STATUS_OBSERVER_SYSTEM_SENSOR_CODES=PYTHON_SYSTEM
+STATUS_OBSERVER_SYSTEM_SENSOR_CODES=SYSTEM
 STATUS_OBSERVER_OFFLINE_TIMEOUT_S=5
 STATUS_OBSERVER_CHECK_INTERVAL_S=1
 STATUS_OBSERVER_STARTUP_GRACE_S=5
