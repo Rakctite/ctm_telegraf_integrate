@@ -92,10 +92,10 @@ def parse_timestamp_ns(val):
     if not raw:
         return None
 
-    normalized = raw
+    normalized = raw.replace("T", " ", 1)
     timezone_part = raw[-3:]
     if len(raw) >= 3 and timezone_part[0] in {"+", "-"} and timezone_part[1:].isdigit():
-        normalized = f"{raw}00"
+        normalized = f"{normalized}00"
 
     for pattern in ("%Y-%m-%d %H:%M:%S.%f%z", "%Y-%m-%d %H:%M:%S%z"):
         try:

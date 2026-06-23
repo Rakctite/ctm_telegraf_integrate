@@ -42,7 +42,7 @@ services:
     restart: unless-stopped
 
   ctm_telegraf_integrate:
-    image: ${REGISTRY:-203.228.107.184:5000}/btx/ctm_telegraf_integrate:${CTM_TELEGRAF_INTEGRATE_IMAGE_TAG:-1.0.3}
+    image: ${REGISTRY:-203.228.107.184:5000}/btx/ctm_telegraf_integrate:${CTM_TELEGRAF_INTEGRATE_IMAGE_TAG:-1.0.4}
     pull_policy: always
     container_name: ctm_telegraf_integrate
     environment:
@@ -61,7 +61,7 @@ services:
     restart: unless-stopped
 
   status_observer:
-    image: ${REGISTRY:-203.228.107.184:5000}/btx/ctm_telegraf_integrate:${CTM_TELEGRAF_INTEGRATE_IMAGE_TAG:-1.0.3}
+    image: ${REGISTRY:-203.228.107.184:5000}/btx/ctm_telegraf_integrate:${CTM_TELEGRAF_INTEGRATE_IMAGE_TAG:-1.0.4}
     pull_policy: always
     container_name: ctm_status_observer
     command: ["python3", "-u", "/telegraf/telegraf_py/status_observer.py"]

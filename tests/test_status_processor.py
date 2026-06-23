@@ -36,6 +36,23 @@ class StatusProcessorTests(unittest.TestCase):
             "1781735110210000000\n",
         )
 
+    def test_routes_iso8601_status_timestamp_to_sensor_status(self):
+        line = (
+            'mqtt_status,equip_name=MC02,line_code=LO054,station=ST01,source=iot_temp,status_suffix=status '
+            'sensor_code="Temp_ST01_PL01",conn_status="on",last_seen="2026-06-23T05:34:55.279+00:00",'
+            'health_score=100,error_msg="",update_time="2026-06-23T05:34:56.291+00:00" '
+            "1782192896291000000"
+        )
+
+        result = self.processor.process_line(line)
+
+        self.assertEqual(
+            result,
+            'sensor_status sensor_id=211i,conn_status="on",'
+            'last_seen="2026-06-23T05:34:55.279+00:00",health_score=100 '
+            "1782192896291000000\n",
+        )
+
     def test_rejects_status_without_status_suffix(self):
         line = (
             'mqtt_status,equip_name=MC02,line_code=LO054,station=ST01,source=iot_temp '

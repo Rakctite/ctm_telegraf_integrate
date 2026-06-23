@@ -5,13 +5,13 @@ Integrated Telegraf service for CTM measurement data and sensor status data.
 ## Image
 
 ```sh
-docker build -t ctm_telegraf_integrate:1.0.3 .
+docker build -t ctm_telegraf_integrate:1.0.4 .
 ```
 
 Registry tag:
 
 ```text
-203.228.107.184:5000/btx/ctm_telegraf_integrate:1.0.3
+203.228.107.184:5000/btx/ctm_telegraf_integrate:1.0.4
 ```
 
 ## Data Flow
